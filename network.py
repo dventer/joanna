@@ -15,15 +15,7 @@ class Network:
         self.keys = keys
 
     def command_cisco(self, hosts, set_command):
-        if hosts == 'bsd-asw-mgmt3' or hosts == 'bsd-asw-mgmt4':
-            HOST = {
-                    'ip' : hosts,
-                    'username' : 'cisco-backup',
-                    'password' : 'Cisco@Backup12#',
-                    'device_type' : 'cisco_ios',
-            }
-        else:
-            HOST = {
+        HOST = {
                     'ip' : hosts,
                     'username' : self.username,
                     'password' : self.password,
@@ -45,6 +37,16 @@ class Network:
         net_connect = Netmiko(**HOST)
         return net_connect.send_command(set_command)
 
+    def command_slb(self,host, set_command):
+        HOST = {
+            'ip': hosts,
+            'username': self.username,
+            'password': self.password,
+            'use_keys': self.keys,
+            'device_type': 'piolink',
+        }
+        net_connect = Netmiko(**HOST)
+        return net_connect.send_command(set_command)
 
     def config_cisco(self, host, set_command):
         HOST = {
