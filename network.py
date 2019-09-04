@@ -1,6 +1,7 @@
 from netmiko import Netmiko
 from datetime import datetime
 from time import sleep
+import paramiko
 
 
 class Network:
@@ -71,11 +72,25 @@ class Network:
         net_connect = Netmiko(**HOST)
         return net_connect.send_config_from_file(set_file)
 
+    def cisco_shell(self,host, set_command):
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(host, username=self.username, password=self.password)
+        sleep(2)
+        fshell = client.invoke_shell()
+        fshell.send('\n')
+#        fshell.send('terminal length 0\n')
+        banner = fshell.recv(6500)
+        sleep(1)
+        for command in set_command:
+            fshell.send(command + '\n')
+            sleep(1)
 
-    slb = ['slb-int-a', 'slb-int-b', 'slb-dmz-a', 'slb-dmz-b', 'slb-ext-a', 'slb-ext-b']
-
-
-    firewall = ['bsd-fw','bsd-ext-fw']
+        cmd_output = fshell.recv(65000)
+#        cmd_output = cmd_output.replace(banner,"")
+        print(cmd_output.decode(encoding='UTF-8'))
+        sleep(2)
+        client.close()
 
 
     def config_file(self, device, command):
@@ -83,8 +98,6 @@ class Network:
         net_connect = Netmiko(**device)
         net_connect.send_config_from_file(command)
         print( device['ip'] + ' Done')
-
-
 
     def backup(self):
         self.username = 'jefri'
@@ -97,7 +110,6 @@ class Network:
             file.write(self.command_cisco(host, 'sh run'))
             sleep(3)
             file.close()
-
 
     def backup_slb(self):
         for host in ['slb-int-a', 'slb-int-b', 'slb-dmz-a', 'slb-dmz-b', 'slb-ext-a', 'slb-ext-b']:
@@ -114,7 +126,6 @@ class Network:
             file.write(net_connect.send_command('show run'))
             file.close()
 
-
     def backup_fortigate(self):
         now = datetime.now()
         for host in ['bsd-fw','bsd-ext-fw']:
@@ -130,3 +141,4 @@ class Network:
             file.write(net_connect.send_command('show full'))
             sleep(3)
             file.close()
+
