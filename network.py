@@ -24,7 +24,13 @@ class Network:
                     'device_type' : 'cisco_ios',
             }
         net_connect = Netmiko(**HOST)
-        return net_connect.send_command(set_command)
+        if isinstance(set_command,list):
+            result = []
+            for command in set_command:
+                result.append(net_connect.send_command(command))
+            return result
+        else:
+            return net_connect.send_command(set_command)
 
 
     def command_firewall(self, hosts, set_command):
@@ -58,7 +64,14 @@ class Network:
                 'device_type' : 'cisco_ios',
         }
         net_connect = Netmiko(**HOST)
-        return net_connect.send_config_set(set_command)
+        if isinstance(set_command,list):
+            result = []
+            for command in set_command:
+                result.append(net_connect.send_command(command))
+            return result
+        else:
+            return net_connect.send_command(set_command)
+
 
 
     def config_file(self, host, set_file):
@@ -72,31 +85,32 @@ class Network:
         net_connect = Netmiko(**HOST)
         return net_connect.send_config_from_file(set_file)
 
-    def cisco_shell(self,host, set_command):
+    def cisco_shell(self, host, set_command):
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(host, username=self.username, password=self.password)
-        sleep(2)
         fshell = client.invoke_shell()
-        fshell.send('\n')
-#        fshell.send('terminal length 0\n')
-        banner = fshell.recv(6500)
+        fshell.send('terminal length 0\n')
+        fshell.recv(6500)
         sleep(1)
-        for command in set_command:
-            fshell.send(command + '\n')
-            sleep(1)
+        if isinstance(set_command, list):
+            for command in set_command:
+                fshell.send(command + '\n')
+                sleep(3)
+        else:
+            fshell.send(set_command + '\n')
+            sleep(3)
 
         cmd_output = fshell.recv(65000)
-#        cmd_output = cmd_output.replace(banner,"")
-        print(cmd_output.decode(encoding='UTF-8'))
-        sleep(2)
+        return cmd_output.decode(encoding='UTF-8')
         client.close()
 
 
     def config_file(self, device, command):
-        sleep(1)
         net_connect = Netmiko(**device)
+        sleep(1)
         net_connect.send_config_from_file(command)
+        sleep(1)
         print( device['ip'] + ' Done')
 
     def backup(self):
@@ -115,8 +129,8 @@ class Network:
         for host in ['slb-int-a', 'slb-int-b', 'slb-dmz-a', 'slb-dmz-b', 'slb-ext-a', 'slb-ext-b']:
             HOST = {
                 'ip' : host,
-                'username' : 'slb-backup',
-                'password' : 'Nice@Backup12#',
+                'username' : self.username,
+                'password' : self.password,
                 'device_type' : 'piolink',
         }
             net_connect = Netmiko(**HOST)
@@ -141,4 +155,3 @@ class Network:
             file.write(net_connect.send_command('show full'))
             sleep(3)
             file.close()
-
