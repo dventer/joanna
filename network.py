@@ -33,7 +33,7 @@ class Network:
             else:
                 return net_connect.send_command(set_command)
         except paramiko.ssh_exception.AuthenticationException:
-            print("Wrong Password")
+            print("\nWrong Password\n")
 
 
     def command_firewall(self, hosts, set_command):
@@ -48,7 +48,7 @@ class Network:
             net_connect = Netmiko(**HOST)
             return net_connect.send_command(set_command)
         except paramiko.ssh_exception.AuthenticationException:
-            print("Wrong Password")
+            print("\nWrong Password\n")
 
 
     def command_slb(self,host, set_command):
@@ -63,7 +63,7 @@ class Network:
             net_connect = Netmiko(**HOST)
             return net_connect.send_command(set_command)
         except paramiko.ssh_exception.AuthenticationException:
-            print("Wrong Password")
+            print("\nWrong Password\n")
 
     def config_cisco(self, host, set_command):
         HOST = {
@@ -83,7 +83,7 @@ class Network:
             else:
                 return net_connect.send_config_set(set_command)
         except paramiko.ssh_exception.AuthenticationException:
-            print("Wrong Password")
+            print("\nWrong Password\n")
 
     def config_file(self, host, set_file):
         HOST = {
