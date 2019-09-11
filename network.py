@@ -23,14 +23,17 @@ class Network:
                     'use_keys' : self.keys,
                     'device_type' : 'cisco_ios',
             }
-        net_connect = Netmiko(**HOST)
-        if isinstance(set_command,list):
-            result = []
-            for command in set_command:
-                result.append(net_connect.send_command(command))
-            return result
-        else:
-            return net_connect.send_command(set_command)
+        try:
+            net_connect = Netmiko(**HOST)
+            if isinstance(set_command, list):
+                result = []
+                for command in set_command:
+                    result.append(net_connect.send_command(command))
+                return result
+            else:
+                return net_connect.send_command(set_command)
+        except paramiko.ssh_exception.AuthenticationException:
+            print("Wrong Password")
 
 
     def command_firewall(self, hosts, set_command):
@@ -41,8 +44,12 @@ class Network:
                 'use_keys' : self.keys,
                 'device_type' : 'fortinet',
         }
-        net_connect = Netmiko(**HOST)
-        return net_connect.send_command(set_command)
+        try:
+            net_connect = Netmiko(**HOST)
+            return net_connect.send_command(set_command)
+        except paramiko.ssh_exception.AuthenticationException:
+            print("Wrong Password")
+
 
     def command_slb(self,host, set_command):
         HOST = {
@@ -52,8 +59,11 @@ class Network:
             'use_keys': self.keys,
             'device_type': 'piolink',
         }
-        net_connect = Netmiko(**HOST)
-        return net_connect.send_command(set_command)
+        try:
+            net_connect = Netmiko(**HOST)
+            return net_connect.send_command(set_command)
+        except paramiko.ssh_exception.AuthenticationException:
+            print("Wrong Password")
 
     def config_cisco(self, host, set_command):
         HOST = {
@@ -63,16 +73,17 @@ class Network:
                 'use_keys' : self.keys,
                 'device_type' : 'cisco_ios',
         }
-        net_connect = Netmiko(**HOST)
-        if isinstance(set_command,list):
-            result = []
-            for command in set_command:
-                result.append(net_connect.send_command(command))
-            return result
-        else:
-            return net_connect.send_command(set_command)
-
-
+        try:
+            net_connect = Netmiko(**HOST)
+            if isinstance(set_command, list):
+                result = []
+                for command in set_command:
+                    result.append(net_connect.send_config_set(command))
+                return result
+            else:
+                return net_connect.send_config_set(set_command)
+        except paramiko.ssh_exception.AuthenticationException:
+            print("Wrong Password")
 
     def config_file(self, host, set_file):
         HOST = {
@@ -113,45 +124,4 @@ class Network:
         sleep(1)
         print( device['ip'] + ' Done')
 
-    def backup(self):
-        self.username = 'jefri'
-        self.keys = True
-        for host in ['bsd-core-a', 'bsd-core-b','bsd-dsw-a', 'bsd-dsw-b','bsd-banksw-a',
-           'bsd-banksw-b','bsd-asw-ext-a', 'bsd-asw-ext-b','bsd-asw-dmz-a','bsd-asw-dmz-b',
-           'bsd-asw-dev-a', 'bsd-asw-dev-b','bsd-asw-sync-a', 'bsd-asw-sync-b','bsd-rac-a',
-           'bsd-rac-b','bsd-mgmt-sw1', 'bsd-mgmt-sw2']:
-            file = open(f'/opt/backup/{now:%d-%m-%Y}/{host.upper()}_{now:%d%m%Y}',"w")
-            file.write(self.command_cisco(host, 'sh run'))
-            sleep(3)
-            file.close()
 
-    def backup_slb(self):
-        for host in ['slb-int-a', 'slb-int-b', 'slb-dmz-a', 'slb-dmz-b', 'slb-ext-a', 'slb-ext-b']:
-            HOST = {
-                'ip' : host,
-                'username' : self.username,
-                'password' : self.password,
-                'device_type' : 'piolink',
-        }
-            net_connect = Netmiko(**HOST)
-            sleep(1)
-            file = open(f'/opt/backup/{now:%d-%m-%Y}/{host.upper()}_{now:%d%m%Y}',"w")
-            sleep(3)
-            file.write(net_connect.send_command('show run'))
-            file.close()
-
-    def backup_fortigate(self):
-        now = datetime.now()
-        for host in ['bsd-fw','bsd-ext-fw']:
-            HOST = {
-                'ip' : host,
-                'username' : 'jefri',
-                'use_keys' : True,
-                'device_type' : 'fortinet',
-        }
-            net_connect = Netmiko(**HOST)
-            sleep(1)
-            file = open(f'/opt/backup/{now:%d-%m-%Y}/{host.upper()}_{now:%d%m%Y}',"w")
-            file.write(net_connect.send_command('show full'))
-            sleep(3)
-            file.close()
