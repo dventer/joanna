@@ -53,7 +53,7 @@ class Network:
 
     def command_slb(self,host, set_command):
         HOST = {
-            'ip': hosts,
+            'ip': host,
             'username': self.username,
             'password': self.password,
             'use_keys': self.keys,
